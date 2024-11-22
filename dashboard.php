@@ -12,14 +12,20 @@ if (!isset($_SESSION['employe_id'])) {
 }
 
 // Récupérer les informations de l'employé depuis la session
-$nom = $_SESSION['nom'];
-$prenom = $_SESSION['prenom'];
-$departement = $_SESSION['departement'];
-$role = $_SESSION['role'];
+$nom = isset($_SESSION['nom']) ? $_SESSION['nom'] : '';
+$prenom = isset($_SESSION['prenom']) ? $_SESSION['prenom'] : '';
+$departement = isset($_SESSION['departement']) ? $_SESSION['departement'] : '';
+$role = isset($_SESSION['role']) ? $_SESSION['role'] : '';
 $employe_id = $_SESSION['employe_id'];
 
 // Connexion à la base de données pour récupérer les réservations de l'employé
 $conn = new mysqli($host, $username, $password, $dbname);
+
+// Vérifier la connexion
+if ($conn->connect_error) {
+    die("Échec de la connexion : " . $conn->connect_error);
+}
+
 $sql = "SELECT r.num_reservation, r.date_reservation, r.heure_debut, r.duree, s.type_salle
         FROM reservation r
         JOIN salle s ON r.num_salle = s.num_salle
@@ -63,9 +69,9 @@ $conn->close();
     </nav>
 
     <div class="container mt-4">
-        <h1>Bienvenue, <?php echo $prenom . ' ' . $nom; ?></h1>
-        <p><strong>Département : </strong><?php echo $departement; ?></p>
-        <p><strong>Rôle : </strong><?php echo $role; ?></p>
+        <h1>Bienvenue, <?php echo htmlspecialchars($prenom . ' ' . $nom); ?></h1>
+        <p><strong>Département : </strong><?php echo htmlspecialchars($departement); ?></p>
+        <p><strong>Rôle : </strong><?php echo htmlspecialchars($role); ?></p>
 
         <!-- Bouton pour ouvrir le modal -->
         <button class="btn btn-primary" data-toggle="modal" data-target="#reservationModal">Ajouter une réservation</button>
@@ -87,7 +93,7 @@ $conn->close();
                                 <select class="form-control" id="salle" name="salle" required>
                                     <?php
                                     // Connexion à la base de données pour récupérer les types de salles disponibles
-                                    $conn = new mysqli($servername, $username, $password, $dbname);
+                                    $conn = new mysqli($host, $username, $password, $dbname);
                                     $result = $conn->query("SELECT * FROM salle");
                                     while ($row = $result->fetch_assoc()) {
                                         echo "<option value='" . $row['num_salle'] . "'>" . $row['type_salle'] . "</option>";
@@ -131,14 +137,14 @@ $conn->close();
                 <tbody>
                     <?php foreach ($reservations as $reservation): ?>
                         <tr>
-                            <td><?php echo $reservation['num_reservation']; ?></td>
-                            <td><?php echo $reservation['date_reservation']; ?></td>
-                            <td><?php echo $reservation['heure_debut']; ?></td>
-                            <td><?php echo $reservation['duree']; ?> minutes</td>
-                            <td><?php echo $reservation['type_salle']; ?></td>
+                            <td><?php echo htmlspecialchars($reservation['num_reservation']); ?></td>
+                            <td><?php echo htmlspecialchars($reservation['date_reservation']); ?></td>
+                            <td><?php echo htmlspecialchars($reservation['heure_debut']); ?></td>
+                            <td><?php echo htmlspecialchars($reservation['duree']); ?> minutes</td>
+                            <td><?php echo htmlspecialchars($reservation['type_salle']); ?></td>
                             <td>
-                                <a href="edit_reservation.php?id=<?php echo $reservation['num_reservation']; ?>" class="btn btn-warning">Modifier</a>
-                                <a href="delete_reservation.php?id=<?php echo $reservation['num_reservation']; ?>" class="btn btn-danger" onclick="return confirm('Êtes-vous sûr de vouloir supprimer cette réservation ?');">Supprimer</a>
+                                <a href="edit_reservation.php?id=<?php echo htmlspecialchars($reservation['num_reservation']); ?>" class="btn btn-warning">Modifier</a>
+                                <a href="delete_reservation.php?id=<?php echo htmlspecialchars($reservation['num_reservation']); ?>" class="btn btn-danger" onclick="return confirm('Êtes-vous sûr de vouloir supprimer cette réservation ?');">Supprimer</a>
                             </td>
                         </tr>
                     <?php endforeach; ?>

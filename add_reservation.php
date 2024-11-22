@@ -21,23 +21,41 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
     // Vérifier que les champs sont remplis
     if (!empty($salle) && !empty($date) && !empty($heure) && !empty($duree)) {
-        // Préparer la requête d'insertion
-        $sql = "INSERT INTO reservation (num_employe, num_salle, date_reservation, heure_debut, duree) 
-                VALUES (:employe_id, :salle, :date, :heure, :duree)";
+        // Vérification de la disponibilité de la salle
+        $sql = "SELECT * FROM reservation 
+                WHERE num_salle = :salle AND date_reservation = :date 
+                AND ((heure_debut <= :heure AND heure_debut + duree > :heure) 
+                     OR (heure_debut < :heure AND heure_debut + duree > :heure))";
         $stmt = $pdo->prepare($sql);
-        $stmt->bindParam(':employe_id', $employe_id);
         $stmt->bindParam(':salle', $salle);
         $stmt->bindParam(':date', $date);
         $stmt->bindParam(':heure', $heure);
         $stmt->bindParam(':duree', $duree);
+        $stmt->execute();
 
-        // Exécuter la requête
-        if ($stmt->execute()) {
-            // Redirection vers la page des réservations avec un message de succès
-            header('Location: reservations.php?success=1');
-            exit();
+        // Si la salle est déjà réservée, afficher un message
+        if ($stmt->rowCount() > 0) {
+            echo "La salle est déjà réservée pour ce créneau. Veuillez choisir un autre créneau.";
+            // Vous pouvez ici ajouter un code pour afficher les créneaux disponibles si nécessaire
         } else {
-            echo "Erreur lors de l'ajout de la réservation.";
+            // Préparer la requête d'insertion de la réservation
+            $sql = "INSERT INTO reservation (num_employe, num_salle, date_reservation, heure_debut, duree) 
+                    VALUES (:employe_id, :salle, :date, :heure, :duree)";
+            $stmt = $pdo->prepare($sql);
+            $stmt->bindParam(':employe_id', $employe_id);
+            $stmt->bindParam(':salle', $salle);
+            $stmt->bindParam(':date', $date);
+            $stmt->bindParam(':heure', $heure);
+            $stmt->bindParam(':duree', $duree);
+
+            // Exécuter la requête d'insertion
+            if ($stmt->execute()) {
+                // Redirection vers le dashboard avec un message de succès
+                header('Location: dashboard.php?success=1');
+                exit();
+            } else {
+                echo "Erreur lors de l'ajout de la réservation.";
+            }
         }
     } else {
         echo "Tous les champs sont requis.";

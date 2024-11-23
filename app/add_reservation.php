@@ -35,9 +35,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
         // Si la salle est déjà réservée, afficher un message
         if ($stmt->rowCount() > 0) {
-            echo "La salle est déjà réservée pour ce créneau. Veuillez choisir un autre créneau.";
-            // Vous pouvez ici ajouter un code pour afficher les créneaux disponibles si nécessaire
-        } else {
+            // Redirection vers le tableau de bord avec un message d'erreur
+            header('Location: dashboard.php?error=salle_occupee');
+            exit();
+        }else {
             // Préparer la requête d'insertion de la réservation
             $sql = "INSERT INTO reservation (num_employe, num_salle, date_reservation, heure_debut, duree) 
                     VALUES (:employe_id, :salle, :date, :heure, :duree)";

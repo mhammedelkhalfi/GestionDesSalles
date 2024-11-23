@@ -34,6 +34,9 @@ $stmt = $conn->prepare($sql);
 $stmt->bind_param("i", $employe_id);
 $stmt->execute();
 $result = $stmt->get_result();
+//***************************** */
+
+//***************************** */
 
 // Vérifier si des réservations existent
 $reservations = [];
@@ -52,8 +55,30 @@ $conn->close();
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestion des Réservations</title>
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="fullcalendar/fullcalendar.min.js"></script>
+    <script src="fullcalendar/fullcalendar-locales-all.min.js"></script>
 </head>
 <body>
+<?php
+if (isset($_GET['error']) && $_GET['error'] == 'salle_occupee') {
+    echo "<script>
+        document.addEventListener('DOMContentLoaded', function() {
+            Swal.fire({
+                icon: 'error',
+                title: 'Erreur',
+                text: 'La salle est déjà réservée pour ce créneau. Veuillez choisir un autre créneau.'
+            }).then((result) => {
+                // Redirection après que l'utilisateur ait cliqué sur OK
+                if (result.isConfirmed) {
+                    window.location.href = 'dashboard.php';
+                }
+            });
+        });
+    </script>";
+}
+?>
+
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <a class="navbar-brand" href="index.php">Gestion des Réservations</a>
         <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
@@ -68,14 +93,15 @@ $conn->close();
         </div>
     </nav>
 
+    
     <div class="container mt-4">
         <h1>Bienvenue, <?php echo htmlspecialchars($prenom . ' ' . $nom); ?></h1>
         <p><strong>Département : </strong><?php echo htmlspecialchars($departement); ?></p>
         <p><strong>Rôle : </strong><?php echo htmlspecialchars($role); ?></p>
 
+        <br>
         <!-- Bouton pour ouvrir le modal -->
         <button class="btn btn-primary" data-toggle="modal" data-target="#reservationModal">Ajouter une réservation</button>
-
         <!-- Modal pour ajouter une réservation -->
         <div class="modal fade" id="reservationModal" tabindex="-1" role="dialog" aria-labelledby="reservationModalLabel" aria-hidden="true">
             <div class="modal-dialog" role="document">
@@ -112,7 +138,14 @@ $conn->close();
                             </div>
                             <div class="form-group">
                                 <label for="duree">Durée (en minutes)</label>
-                                <input type="number" class="form-control" id="duree" name="duree" required>
+                                <select class="form-control" id="duree" name="duree" required>
+                                    <?php
+                                        // Générer des options pour 1h à 8h en minutes
+                                            for ($i = 60; $i <= 480; $i += 60) {
+                                                echo "<option value='$i'>" . ($i / 60) . " heure(s)</option>";
+                                            }
+                                        ?>
+                                </select>
                             </div>
                             <button type="submit" class="btn btn-primary">Ajouter</button>
                         </form>
@@ -122,6 +155,8 @@ $conn->close();
         </div>
 
         <!-- Affichage des réservations existantes -->
+        <br>
+        <br>
         <h2>Mes Réservations</h2>
         <?php if (count($reservations) > 0): ?>
             <table class="table table-striped">
@@ -158,5 +193,6 @@ $conn->close();
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.0/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </body>
 </html>

@@ -1,0 +1,53 @@
+pipeline {
+    agent any
+
+    environment {
+        GIT_REPO = 'https://github.com/mhammedelkhalfi/GestionDesSalles.git'
+        TERRAFORM_DIR = 'TerraformScripts' // Chemin où se trouvent tes scripts Terraform
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                echo 'Cloning repository...'
+                git branch: 'main', url: "${env.GIT_REPO}"
+            }
+        }
+
+        stage('Terraform Init') {
+            steps {
+                dir("${env.TERRAFORM_DIR}") {
+                    echo 'Initializing Terraform...'
+                    sh 'terraform init'
+                }
+            }
+        }
+
+        stage('Terraform Plan') {
+            steps {
+                dir("${env.TERRAFORM_DIR}") {
+                    echo 'Planning Terraform deployment...'
+                    sh 'terraform plan'
+                }
+            }
+        }
+
+        stage('Terraform Apply') {
+            steps {
+                dir("${env.TERRAFORM_DIR}") {
+                    echo 'Applying Terraform configuration...'
+                    sh 'terraform apply -auto-approve'
+                }
+            }
+        }
+    }
+
+    post {
+        success {
+            echo 'Terraform applied successfully!'
+        }
+        failure {
+            echo 'Pipeline failed.'
+        }
+    }
+}

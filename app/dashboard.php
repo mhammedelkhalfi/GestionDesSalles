@@ -26,7 +26,7 @@ if ($conn->connect_error) {
     die("Échec de la connexion : " . $conn->connect_error);
 }
 
-$sql = "SELECT r.num_reservation, r.date_reservation, r.heure_debut, r.duree, s.type_salle
+$sql = "SELECT r.num_reservation, r.date_reservation, r.heure_debut, r.duree, r.heure_fin, s.type_salle
         FROM reservation r
         JOIN salle s ON r.num_salle = s.num_salle
         WHERE r.num_employe = ?";
@@ -79,19 +79,23 @@ if (isset($_GET['error']) && $_GET['error'] == 'salle_occupee') {
 }
 ?>
 
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-        <a class="navbar-brand" href="index.php">Gestion des Réservations</a>
-        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav ml-auto">
-                <li class="nav-item active"><a class="nav-link" href="reservations.php">Réservations</a></li>
-                <li class="nav-item"><a class="nav-link" href="profile.php">Mon Profil</a></li>
-                <li class="nav-item"><a class="nav-link" href="logout.php">Se déconnecter</a></li>
-            </ul>
-        </div>
-    </nav>
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <a class="navbar-brand" href="index.php">Gestion des Réservations</a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ml-auto">
+            <li class="nav-item"><a class="nav-link" href="reservations.php">Réservations</a></li>
+            <li class="nav-item"><a class="nav-link" href="profile.php">Mon Profil</a></li>
+            <?php if ($_SESSION['role'] === 'ADMIN'): ?>
+                <li class="nav-item"><a class="nav-link" href="gestion_salles.php">Gestion des Salles</a></li>
+            <?php endif; ?>
+            <li class="nav-item"><a class="nav-link" href="logout.php">Se déconnecter</a></li>
+        </ul>
+    </div>
+</nav>
+
 
     
     <div class="container mt-4">
@@ -166,24 +170,27 @@ if (isset($_GET['error']) && $_GET['error'] == 'salle_occupee') {
                         <th>Date</th>
                         <th>Heure de début</th>
                         <th>Durée</th>
+                        <th>Heure de fin</th>
                         <th>Type de Salle</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <?php foreach ($reservations as $reservation): ?>
-                        <tr>
-                            <td><?php echo htmlspecialchars($reservation['num_reservation']); ?></td>
-                            <td><?php echo htmlspecialchars($reservation['date_reservation']); ?></td>
-                            <td><?php echo htmlspecialchars($reservation['heure_debut']); ?></td>
-                            <td><?php echo htmlspecialchars($reservation['duree']); ?> minutes</td>
-                            <td><?php echo htmlspecialchars($reservation['type_salle']); ?></td>
-                            <td>
-                                <a href="edit_reservation.php?id=<?php echo htmlspecialchars($reservation['num_reservation']); ?>" class="btn btn-warning">Modifier</a>
-                                <a href="delete_reservation.php?id=<?php echo htmlspecialchars($reservation['num_reservation']); ?>" class="btn btn-danger" onclick="return confirm('Êtes-vous sûr de vouloir supprimer cette réservation ?');">Supprimer</a>
-                            </td>
-                        </tr>
-                    <?php endforeach; ?>
-                </tbody>
+    <?php foreach ($reservations as $reservation): ?>
+        <tr>
+            <td><?php echo htmlspecialchars($reservation['num_reservation']); ?></td>
+            <td><?php echo htmlspecialchars($reservation['date_reservation']); ?></td>
+            <td><?php echo date('H:i', strtotime($reservation['heure_debut'])); ?></td> <!-- Heure de début formatée -->
+            <td><?php echo htmlspecialchars($reservation['duree']); ?> minutes</td>
+            <td><?php echo date('H:i', strtotime($reservation['heure_fin'])); ?></td> <!-- Heure de fin formatée -->
+            <td><?php echo htmlspecialchars($reservation['type_salle']); ?></td>
+            <td>
+                <a href="edit_reservation.php?id=<?php echo htmlspecialchars($reservation['num_reservation']); ?>" class="btn btn-warning">Modifier</a>
+                <a href="delete_reservation.php?id=<?php echo htmlspecialchars($reservation['num_reservation']); ?>" class="btn btn-danger" onclick="return confirm('Êtes-vous sûr de vouloir supprimer cette réservation ?');">Supprimer</a>
+            </td>
+        </tr>
+    <?php endforeach; ?>
+</tbody>
+
             </table>
         <?php else: ?>
             <p>Aucune réservation trouvée.</p>

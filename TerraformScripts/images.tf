@@ -60,7 +60,10 @@ resource "docker_container" "mysql_db" {
     name = docker_network.php_network.name
   }
   lifecycle {
-    ignore_changes = [env] # Empêcher la suppression si les variables d'environnement changent
+    ignore_changes = [
+      image,  # Ignorer les changements dans l'image
+      env     # Ignorer les changements dans les variables d'environnement
+    ]
   }
 }
 
@@ -89,7 +92,10 @@ resource "docker_container" "phpmyadmin" {
   }
   depends_on = [docker_container.mysql_db] # Assurez-vous que MySQL est disponible avant de démarrer phpMyAdmin
   lifecycle {
-    ignore_changes = [env] # Empêcher la suppression si les variables d'environnement changent
+    ignore_changes = [
+      image,  # Ignorer les changements dans l'image
+      env     # Ignorer les changements dans les variables d'environnement
+    ]
   }
 }
 
@@ -116,6 +122,10 @@ resource "docker_container" "grafana" {
   }
   depends_on = [docker_container.php_web, docker_container.mysql_db] # Dépendances explicites
   lifecycle {
-    ignore_changes = [env] # Ignorer les changements sur les variables d'environnement
+    ignore_changes = [
+      image,  # Ignorer les changements dans l'image
+      env     # Ignorer les changements dans les variables d'environnement
+    ]
   }
+
 }

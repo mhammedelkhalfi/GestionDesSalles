@@ -1,0 +1,33 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: mysql-container
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: reservation_db
+      MYSQL_PASSWORD: root
+      MYSQL_USER: user
+    ports:
+      - "3306:3306"
+    networks:
+      - liquibase-net
+
+  liquibase:
+    image: liquibase/liquibase:latest
+    container_name: liquibase
+    depends_on:
+      - mysql
+    networks:
+      - liquibase-net
+    volumes:
+      - ./changelog:/liquibase/changelog
+      - ./mysql-connector-java-8.0.xx.jar:/liquibase/lib/mysql-connector-java-8.0.xx.jar
+    entrypoint: ["liquibase"]
+    command: [
+      "--defaultsFile=/liquibase/workspace/liquibase.properties",
+      "update"
+    ]
+
+networks:
+  liquibase-net:
+    driver: bridge

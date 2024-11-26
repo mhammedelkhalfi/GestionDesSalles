@@ -1,0 +1,52 @@
+pipeline {
+    agent any
+
+    parameters {
+        choice(name: 'action', choices: ['apply', 'destroy'], description: 'Select the action to perform')
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                git branch: 'master', url: 'https://github.com/mhammedelkhalfi/GestionDesSalles.git'
+            }
+        }
+        stage('Terraform init') {
+            steps {
+                dir('TerraformScripts') {
+                    bat 'terraform init'
+                }
+            }
+        }
+        stage('Terraform Plan') {
+            steps {
+                dir('TerraformScripts') {
+                    script {
+                        if (params.action == 'apply') {
+                            bat 'terraform plan -out=tfplan'
+                            bat 'terraform show -no-color tfplan > tfplan.txt'
+                        }
+                    }
+                }
+            }
+        }
+        stage('Terraform Apply/Destroy') {
+            steps {
+                dir('TerraformScripts') {
+                    script {
+                        if (params.action == 'apply') {
+                            def plan = readFile 'tfplan.txt'
+                            input message: "Do you want to apply the plan?",
+                            parameters: [text(name: 'Plan', description: 'Please review the plan', defaultValue: plan)]
+                            bat 'terraform apply -input=false tfplan'
+                        } else if (params.action == 'destroy') {
+                            bat 'terraform destroy --auto-approve'
+                        } else {
+                            error "Invalid action selected. Please choose either 'apply' or 'destroy'."
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

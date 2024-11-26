@@ -87,6 +87,7 @@ resource "docker_container" "phpmyadmin" {
 # Image Grafana
 resource "docker_image" "grafana_image" {
   name = "grafana/grafana"
+  keep_locally = true
 }
 
 # Conteneur Grafana

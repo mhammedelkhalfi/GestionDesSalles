@@ -129,3 +129,4 @@ resource "docker_container" "grafana" {
   }
 
 }
+

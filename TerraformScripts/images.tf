@@ -1,13 +1,15 @@
+# Définition du réseau Docker
 resource "docker_network" "php_network" {
   name = "new_php_network"
   lifecycle {
-    ignore_changes = [name]
+    ignore_changes = [name] # Ignorer les changements dans le nom du réseau
   }
 }
 
 # Image PHP avec Apache
 resource "docker_image" "php_apache" {
   name = "php:7.4-apache"
+  pull_triggers = ["always"] # Toujours tirer la dernière version de l'image
 }
 
 # Conteneur PHP avec Apache
@@ -25,17 +27,20 @@ resource "docker_container" "php_web" {
   networks_advanced {
     name = docker_network.php_network.name
   }
-   command = [
+  command = [
     "bash",
     "-c",
     "apt-get update && apt-get install -y libmariadb-dev && docker-php-ext-install pdo pdo_mysql && apache2-foreground"
   ]
+  lifecycle {
+    ignore_changes = [image, volumes] # Empêcher la suppression lors des modifications de l'image ou des volumes
+  }
 }
-
 
 # Image MySQL
 resource "docker_image" "mysql_image" {
   name = "mysql:5.7"
+  pull_triggers = ["always"] # Toujours tirer la dernière version de l'image
 }
 
 # Conteneur MySQL
@@ -54,12 +59,15 @@ resource "docker_container" "mysql_db" {
   networks_advanced {
     name = docker_network.php_network.name
   }
+  lifecycle {
+    ignore_changes = [env] # Empêcher la suppression si les variables d'environnement changent
+  }
 }
-
 
 # Image phpMyAdmin
 resource "docker_image" "phpmyadmin_image" {
   name = "phpmyadmin/phpmyadmin"
+  pull_triggers = ["always"] # Toujours tirer la dernière version de l'image
 }
 
 # Conteneur phpMyAdmin
@@ -79,15 +87,17 @@ resource "docker_container" "phpmyadmin" {
   networks_advanced {
     name = docker_network.php_network.name
   }
-  depends_on = [docker_container.mysql_db]  # Dépendance explicite
+  depends_on = [docker_container.mysql_db] # Assurez-vous que MySQL est disponible avant de démarrer phpMyAdmin
+  lifecycle {
+    ignore_changes = [env] # Empêcher la suppression si les variables d'environnement changent
+  }
 }
-
-
 
 # Image Grafana
 resource "docker_image" "grafana_image" {
   name = "grafana/grafana"
-  keep_locally = true
+  keep_locally = true # Garder l'image localement
+  pull_triggers = ["always"]
 }
 
 # Conteneur Grafana
@@ -99,10 +109,13 @@ resource "docker_container" "grafana" {
     external = 3000
   }
   env = [
-    "GF_SECURITY_ADMIN_PASSWORD=admin"  # Définir un mot de passe administrateur pour Grafana
+    "GF_SECURITY_ADMIN_PASSWORD=admin" # Définir un mot de passe administrateur pour Grafana
   ]
   networks_advanced {
     name = docker_network.php_network.name
   }
-  depends_on = [docker_container.php_web, docker_container.mysql_db]  # Dépendances explicites
+  depends_on = [docker_container.php_web, docker_container.mysql_db] # Dépendances explicites
+  lifecycle {
+    ignore_changes = [env] # Ignorer les changements sur les variables d'environnement
+  }
 }

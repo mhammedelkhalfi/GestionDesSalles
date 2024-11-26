@@ -1,8 +1,8 @@
 # Définition du réseau Docker
 resource "docker_network" "php_network" {
-  name = "new_php_network"
+  name = "new_php_network-${terraform.workspace}"
   lifecycle {
-    ignore_changes = [name] # Ignorer les changements dans le nom du réseau
+    create_before_destroy = true
   }
 }
 

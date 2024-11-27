@@ -1,33 +1,44 @@
+version: "3.8"
 services:
-  mysql:
-    image: mysql:8.0
+  mysql_db:
+    image: mysql:5.7
     container_name: mysql-container
-    environment:
-      MYSQL_ROOT_PASSWORD: rootpassword
-      MYSQL_DATABASE: reservation_db
-      MYSQL_PASSWORD: root
-      MYSQL_USER: user
     ports:
       - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: reservation_db
+      MYSQL_PASSWORD: root
     networks:
-      - liquibase-net
+      - infra-app
 
-  liquibase:
-    image: liquibase/liquibase:latest
-    container_name: liquibase
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: phpmyadmin-container
+    ports:
+      - "8081:80"
+    environment:
+      PMA_HOST: mysql-container
+      PMA_PORT: 3306
+      PMA_USER: root
+      PMA_PASSWORD: root
     depends_on:
-      - mysql
+      - mysql_db
     networks:
-      - liquibase-net
-    volumes:
-      - ./changelog:/liquibase/changelog
-      - ./mysql-connector-java-8.0.xx.jar:/liquibase/lib/mysql-connector-java-8.0.xx.jar
-    entrypoint: ["liquibase"]
-    command: [
-      "--defaultsFile=/liquibase/workspace/liquibase.properties",
-      "update"
-    ]
+      - infra-app
+
+  grafana:
+    image: grafana/grafana
+    container_name: grafana-container
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: admin
+    depends_on:
+      - mysql_db
+    networks:
+      - infra-app
 
 networks:
-  liquibase-net:
-    driver: bridge
+  infra-app:
+    name: "infra-app"

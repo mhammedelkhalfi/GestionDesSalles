@@ -1,8 +1,8 @@
 <?php
-$host = '127.0.0.1';
+$host = 'mysql-container'; // Utilisation du nom du conteneur MySQL
 $dbname = 'reservation_db'; // Le nom de votre base de données
 $username = 'root'; // Votre nom d'utilisateur MySQL
-$password = ''; // Votre mot de passe MySQL, si vide laissez-le comme cela
+$password = 'root'; // Votre mot de passe MySQL
 
 try {
     // Création de la connexion PDO
